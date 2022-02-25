@@ -8,6 +8,8 @@ const QRScannerNode = Noodl.defineNode({
 	name:'QR Scanner',
 	initialize:function () {
 		this._internal.qrScanner = null;
+		this._internal.currentOptions = {returnDetailedScanResult:false};
+		this._internal.isRunning = false;
 	},
 	inputs:{
 		 frontFacing: {
@@ -46,35 +48,63 @@ const QRScannerNode = Noodl.defineNode({
 		start:{
 			displayName:'Start',	
 			signal:function() {
-				if (this._internal.qrScanner === null) {
-					this._internal.qrScanner = new QrScanner(this.inputs.videoNode, result => {
-						console.log('decoded qr code:', result);
-						this.setOutputs ({result:result}); 
-						this.sendSignalOnOutput ("scannedResult");
-					});
-				}
-				this._internal.qrScanner.start ();
+				this.createQRScanner (this._internal.currentOptions);
+				this.startScanner();
 			},
 		},
 		stop:{
 			displayName:'Stop',
 			signal:function() {
-				if (this._internal.qrScanner !== null) {
-					this._internal.qrScanner.stop ();
-				}
+				this.stopScanner();
 			}
 		}
 	},
 	changed:{
+		frontFacing:function () {
+			this._internal.currentOptions.preferredCamera = this.inputs.frontFacing === true?'user':'environment';
+			if (this._internal.isRunning === true) {
+				this.createQRScanner (this._internal.currentOptions);
+				this.startScanner();
+			}
+		},
+
 		videoNode:function () {
 			
+		}	
+	},
+	methods:{
+		createQRScanner : function (options) {
+			if (this._internal.qrScanner !== null) {
+				// destroy the old qr scanner
+				/*if (this._internal.isRunning === true) {
+					this.stopScanner ();
+				}*/
+				console.log ("destroying scanner");
+				this._internal.qrScanner.destroy ();
+				this._internal.qrScanner = null;
+			}
+			if (this._internal.qrScanner === null) {
+				console.log ("creating qrscanner");
+				this._internal.qrScanner = new QrScanner(this.inputs.videoNode, result => {
+					console.log (result);
+					this.setOutputs ({result:result.data}); 
+					this.sendSignalOnOutput ("scannedResult");
+				}, options);
+			}
 		},
-		FirstName:function() {
-			this.setOutputs({FullName:this.inputs.FirstName + ' ' + this.inputs.LastName});
+		startScanner: function () {
+			if (this._internal.qrScanner !== null) {
+				this._internal.qrScanner.start ();
+				this._internal.isRunning = true;
+			}
+			
 		},
-		LastName:function() {
-			this.setOutputs({FullName:this.inputs.FirstName + ' ' + this.inputs.LastName});
-		},		
+		stopScanner: function () {
+			if (this._internal.qrScanner !== null) {
+				this._internal.qrScanner.stop ();
+			}
+			this._internal.isRunning = false;
+		}
 	}
 })
 
