@@ -8,7 +8,10 @@ const QRScannerNode = Noodl.defineNode({
 	name:'QR Scanner',
 	initialize:function () {
 		this._internal.qrScanner = null;
-		this._internal.currentOptions = {returnDetailedScanResult:false};
+		this._internal.currentOptions = {returnDetailedScanResult:false,
+			flashOn:this.inputs.flashOn,
+			frontFacing:this.inputs.frontFacing === true?'user':'environment'
+		};
 		this._internal.isRunning = false;
 	},
 	inputs:{
@@ -16,6 +19,11 @@ const QRScannerNode = Noodl.defineNode({
 			type: 'boolean',
 			displayName:'Front Facing',
             default: true
+        },
+        flashOn: {
+        	type: 'boolean',
+        	displayName:'Flash On',
+        	default: false
         },
         videoNode: {
         	displayName:'Video node',
@@ -34,7 +42,12 @@ const QRScannerNode = Noodl.defineNode({
         scannedResult: {
         	type:'signal',
         	displayName: 'Scan Ready'
-        }/*
+        },
+        latestError: {
+        	type:'string',
+        	displayName:'Latest Error'
+        }
+        /*
         streamStarted: {
             displayName: 'Media Stream Started',
             type: 'signal'
@@ -63,8 +76,23 @@ const QRScannerNode = Noodl.defineNode({
 		frontFacing:function () {
 			this._internal.currentOptions.preferredCamera = this.inputs.frontFacing === true?'user':'environment';
 			if (this._internal.isRunning === true) {
-				this.createQRScanner (this._internal.currentOptions);
-				this.startScanner();
+				this._internal.qrScanner.setCamera (this.inputs.frontFacing === true?'user':'environment');
+				//this.createQRScanner (this._internal.currentOptions);
+				//this.startScanner();
+			}
+		},
+		flashOn:function () {
+			this._internal.currentOptions.flashOn = this.inputs.flashOn;
+			if (this._internal.isRunning === true) {
+				if (this.inputs.flashOn === true) {
+					this.this.setFlashState (true);
+				}
+				else {
+					this.setFlashState (false);
+				}
+				
+				//this.createQRScanner (this._internal.currentOptions);
+				//this.startScanner();
 			}
 		},
 
@@ -90,6 +118,9 @@ const QRScannerNode = Noodl.defineNode({
 					this.setOutputs ({result:result.data}); 
 					this.sendSignalOnOutput ("scannedResult");
 				}, options);
+				if (options.flashOn === true) {
+					this.setFlashState (true);
+				}
 			}
 		},
 		startScanner: function () {
@@ -104,6 +135,21 @@ const QRScannerNode = Noodl.defineNode({
 				this._internal.qrScanner.stop ();
 			}
 			this._internal.isRunning = false;
+		},
+		setFlashState: function (state) {
+			if (this._internal.qrScanner !== null) {
+				if (this._internal.qrScanner.hasFlash () === true) {
+					if (state === true) {
+						this._internal.qrScanner.turnFlashOn();
+					}
+					else {
+						this._internal.qrScanner.turnFlashOff();
+					}
+				}
+				else {
+					this.setOutputs ({latestError:"no flash!"});
+				}
+			}
 		}
 	}
 })
