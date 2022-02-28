@@ -53,7 +53,7 @@ const CameraQRScannerNode = Noodl.defineNode({
         },
         validScan: {
         	type:'boolean',
-        	dispalyName: 'Valid Scan',
+        	displayName: 'Valid Scan',
         	default: false
         }
         
@@ -231,7 +231,7 @@ const ImageQRScannerNode = Noodl.defineNode({
         },
         validScan: {
         	type:'boolean',
-        	dispalyName: 'Valid Scan',
+        	displayName: 'Valid Scan',
         	default: false
         }  
 	},
