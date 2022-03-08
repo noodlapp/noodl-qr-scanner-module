@@ -15,6 +15,7 @@ const CameraQRScannerNode = Noodl.defineNode({
 		this._internal.scanStarted = false;
 		this._internal.scannerCreationScheduled = false;
 		this._internal.lastScanResult = '';
+		this.setOutputs ({validScan:false});
 	},
 	inputs:{
 		 frontFacing: {
@@ -53,8 +54,7 @@ const CameraQRScannerNode = Noodl.defineNode({
         },
         validScan: {
         	type:'boolean',
-        	displayName: 'Valid Scan',
-        	default: false
+        	displayName: 'Valid Scan'
         }
         
 	},
@@ -208,7 +208,7 @@ const ImageQRScannerNode = Noodl.defineNode({
 	category:'Image',
 	name:'Image QR Scanner',
 	initialize:function () {
-		
+		this.setOutputs ({validScan:false});
 	},
 	inputs:{
 		file: {
@@ -231,8 +231,7 @@ const ImageQRScannerNode = Noodl.defineNode({
         },
         validScan: {
         	type:'boolean',
-        	displayName: 'Valid Scan',
-        	default: false
+        	displayName: 'Valid Scan'
         }  
 	},
 	signals:{
